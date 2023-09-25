@@ -37,6 +37,7 @@ const usuariosPut = (req = request, res) => {
         msg: 'delete'
     })
   }
+  
 
   module.exports = {
     usuariosGet,
