@@ -3,15 +3,30 @@ const Usuario = require('../models/user')
 const bcryptjs = require('bcryptjs')
 
 
-const usuariosGet = (req = request, res = response) => {
+const usuariosGet = async (req = request, res = response) => {
 
-    const { name, age, skill = 300 } = req.query
-    
+    const { limite = 5, desde = 0} = req.query
+
+    const query = {estado : true}
+
+    //Forma de mostrar usuarios y total -- más lenta
+    // const usuarios = await Usuario.find(query)
+    // .limit( Number( limite ))
+    // .skip( Number( desde ));
+
+    // const total = Usuario.countDocuments(query);
+
+    //otra forma de mostra usuarios y total -- más rapida
+    const [total, usuarios] = Promise.all([
+      countDocuments(query),
+      Usuario.find(query)
+        .limit( Number( limite ))
+        .skip( Number( desde ))
+    ]);
+
     res.status(200).json({
-        msg: 'get',
-        name,
-        age,
-        skill
+      total,
+      usuarios
     })
   }
 
@@ -32,12 +47,21 @@ const usuariosPost = async (req , res) => {
     })
   }
 
-const usuariosPut = (req = request, res) => {
+const usuariosPut =  async(req = request, res) => {
 
-  const {id } = req.params
-    res.status(201).json({
-        msg: 'put',
-        id
+  const { id } = req.params
+  const {_id, password, google, ...restoInfo} = req.body;
+
+
+  if ( password ){
+    const salt = bcryptjs.genSaltSync();
+    restoInfo.password = bcryptjs.hashSync(password, salt);
+  }
+
+  const usuario = await Usuario.findByIdAndUpdate(id, restoInfo)
+
+  res.status(201).json({
+        usuario
     })
   }
 
